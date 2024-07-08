@@ -4,26 +4,44 @@ import 'package:closet_my_wardrobe_40_a/closet/models/garderob_model.dart';
 import 'package:closet_my_wardrobe_40_a/lsc/cmw_botom.dart';
 import 'package:closet_my_wardrobe_40_a/lsc/cmw_color.dart';
 import 'package:closet_my_wardrobe_40_a/lsc/cmw_dok.dart';
+import 'package:closet_my_wardrobe_40_a/weekly/category/models/detail_clothes_model.dart';
+import 'package:closet_my_wardrobe_40_a/weekly/category/models/detail_odejda_model.dart';
+import 'package:event_bus/event_bus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
+
+  ///Event Bus
+  GetIt.I.registerSingleton(EventBus());
 
   Hive.registerAdapter(BrindiTypeAdapter());
   Hive.registerAdapter(WhereToWearAdapter());
   Hive.registerAdapter(GarderobStyleAdapter());
   Hive.registerAdapter(GarderobCategoryAdapter());
   Hive.registerAdapter(GarderobModelAdapter());
+  ///
+  Hive.registerAdapter(DetailodejdamodelAdapter());
+  Hive.registerAdapter(DetailClothesModelAdapter());
+
+  ///Shared Preferences
+  GetIt.I.registerSingleton(await SharedPreferences.getInstance());
 
   final directory = await getApplicationDocumentsDirectory();
   await Hive.initFlutter(directory.path);
   await Hive.openBox<GarderobModel>('garderobModel');
-  runApp(const MyApp());
 
+  GetIt.I.registerSingleton(
+      await Hive.openBox<Detailodejdamodel>('crypto_coins_box'));
+  GetIt.I.registerSingleton(
+      await Hive.openBox<DetailClothesModel>('detail_box'));
+  runApp(const MyApp());
   await Apphud.start(apiKey: CMWDokum.aPpHadK);
 }
 
@@ -98,4 +116,17 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
     );
   }
+}
+
+SharedPreferences prefs = GetIt.I<SharedPreferences>();
+
+
+///Создание id для alerts
+void saveIdAlert(int id) async{
+  await prefs.setInt('ALERT_ID_PERCENT', id);
+}
+
+int getIdAlert() {
+  final i = prefs.getInt('ALERT_ID_PERCENT');
+  return i ?? 0;
 }
